@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pandas
+rank_bm25
+nltk

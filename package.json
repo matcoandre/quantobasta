@@ -1,0 +1,24 @@
+{
+  "name": "ricettario-llm-stackblitz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm:server\" \"npm:client\"",
+    "server": "pip install -r backend/requirements.txt && python backend/main.py",
+    "client": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "vue": "^3.3.11"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "autoprefixer": "^10.4.22",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "vite": "^5.0.10"
+  }
+}
