@@ -20,32 +20,47 @@ app.add_middleware(
 
 CSV_PATH = "backend/recipes.csv"
 
-# --- LOGICA DI PULIZIA AVANZATA (STOP WORDS) ---
+# --- 1. PREPROCESSING CORRETTO ---
+
+def clean_text(text):
+    """
+    Pulisce il testo per l'indicizzazione.
+    FIX IMPORTANTE: Sostituisce la punteggiatura con SPAZI.
+    Prima: "all'amatriciana" -> "allamatriciana" (Errore)
+    Ora: "all'amatriciana" -> "all amatriciana" (Corretto)
+    """
+    text = str(text).lower()
+    
+    # Crea una tabella di traduzione: ogni segno di punteggiatura diventa uno spazio
+    # Questo preserva le parole composte con apostrofi o trattini
+    translator = str.maketrans(string.punctuation, ' ' * len(string.punctuation))
+    text = text.translate(translator)
+    
+    # Rimuove doppi spazi generati dalla sostituzione
+    return " ".join(text.split())
+
+def get_ngrams(text, n=2):
+    words = text.split()
+    tokens = words.copy() # Unigrammi (parole singole)
+    
+    # Bigrammi (coppie di parole)
+    if len(words) >= n:
+        n_grams_tuples = zip(*[words[i:] for i in range(n)])
+        tokens.extend([" ".join(ngram) for ngram in n_grams_tuples])
+    return tokens
+
+# --- 2. LOGICA DI PULIZIA VISIVA (STOP WORDS & STEPS) ---
 
 def split_text_smart(text):
-    """
-    Spezza il testo in frasi, ma evita di spezzare se la frase finisce
-    con articoli o preposizioni (es. "con il Pecorino").
-    """
     text = str(text).strip()
     if not text: return []
-
-    # 1. Pulizia caratteri tecnici
     text = text.replace("['", "").replace("']", "").replace('["', '').replace('"]', '')
-    text = text.replace(". ", ". |SPLIT|") # I punti veri sono sempre split sicuri
-
-    # 2. Regex: Cerca minuscola -> spazio -> Maiuscola
-    # Inserisce un marcatore speciale
+    text = text.replace(". ", ". |SPLIT|")
     text = re.sub(r'(?<=[a-zà-ù])\s+(?=[A-Z])', ' |SPLIT|', text)
-
-    # 3. Divide grezzamente
     raw_parts = text.split('|SPLIT|')
 
-    # 4. LOGICA DI RICUCITURA (MERGE)
-    # Lista di parole che NON possono chiudere una frase
     bad_endings = {
-        'il', 'lo', 'la', 'i', 'gli', 'le', 
-        'un', 'uno', 'una', 
+        'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una', 
         'del', 'dello', 'della', 'dei', 'degli', 'delle', 
         'al', 'allo', 'alla', 'ai', 'agli', 'alle', 
         'nel', 'nello', 'nella', 'nei', 'negli', 'nelle', 
@@ -61,37 +76,25 @@ def split_text_smart(text):
     for part in raw_parts:
         part = part.strip()
         if not part: continue
-
-        # Se c'è qualcosa nel buffer (dallo step precedente), lo uniamo all'inizio di questo
         if buffer:
             part = buffer + " " + part
             buffer = ""
-
-        # Controlliamo l'ultima parola di questo pezzo
-        # Toglie punteggiatura per il controllo
+        
         words = part.split()
         if not words: continue
-        
         last_word = words[-1].lower().translate(str.maketrans('', '', string.punctuation))
 
-        # Se finisce con una "bad ending" (es. "con il"), NON salviamo ancora.
-        # Mettiamo tutto nel buffer e aspettiamo il prossimo giro.
         if last_word in bad_endings:
             buffer = part
         else:
-            # È una frase valida, la salviamo
-            # Aggiungiamo punto finale se serve
-            if part[-1] not in ['.', '!', '?', ':']:
-                part += "."
+            if part[-1] not in ['.', '!', '?', ':']: part += "."
             final_steps.append(part)
 
-    # Se è rimasto qualcosa nel buffer alla fine (caso raro), lo aggiungiamo
     if buffer:
         if buffer[-1] not in ['.', '!', '?', ':']: buffer += "."
         final_steps.append(buffer)
             
     return final_steps
-
 
 def parse_ingredients_smart(val):
     if pd.isna(val) or val == "": return []
@@ -120,13 +123,10 @@ def parse_steps_smart(val):
     except:
         return split_text_smart(str(val))
 
-# --- CARICAMENTO ---
+# --- 3. CARICAMENTO ---
 
 def load_data():
-    if not os.path.exists(CSV_PATH):
-        print("❌ CSV non trovato.")
-        return pd.DataFrame()
-
+    if not os.path.exists(CSV_PATH): return pd.DataFrame()
     try:
         df = pd.read_csv(CSV_PATH)
         df.columns = [c.strip() for c in df.columns]
@@ -148,18 +148,12 @@ def load_data():
         elif 'url' in cols_lower: rename_map[cols_lower['url']] = 'URL'
 
         df.rename(columns=rename_map, inplace=True)
-        
-        if 'title_page' not in df.columns: 
-            return pd.DataFrame()
+        if 'title_page' not in df.columns: return pd.DataFrame()
 
         df = df.fillna("")
         df['title_page'] = df['title_page'].astype(str)
         
-        # Parsing
-        print("🧹 Elaborazione Ingredienti...")
         df['clean_ingredients'] = df['ingredients_raw'].apply(parse_ingredients_smart)
-        
-        print("🧹 Elaborazione Procedimenti (Smart Merge)...")
         if 'steps_raw' in df.columns:
             df['clean_steps'] = df['steps_raw'].apply(parse_steps_smart)
         else:
@@ -167,6 +161,7 @@ def load_data():
 
         if 'URL' not in df.columns: df['URL'] = "#"
 
+        # Search Text: Qui usiamo la nuova clean_text implicitamente dopo
         df['search_text'] = df['title_page'] + " " + \
                             df['clean_ingredients'].apply(lambda x: " ".join(x))
         
@@ -180,22 +175,10 @@ def load_data():
 
 df = load_data()
 
-# --- MOTORE ---
-
-def clean_text(text):
-    text = str(text).lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    return text
-
-def get_ngrams(text, n=2):
-    words = text.split()
-    tokens = words.copy()
-    if len(words) >= n:
-        n_grams_tuples = zip(*[words[i:] for i in range(n)])
-        tokens.extend([" ".join(ngram) for ngram in n_grams_tuples])
-    return tokens
+# --- 4. MOTORE BM25 ---
 
 if not df.empty and 'search_text' in df.columns:
+    # Applica la NUOVA clean_text
     corpus = df['search_text'].apply(clean_text).tolist()
     tokenized_corpus = [get_ngrams(doc) for doc in corpus]
     bm25 = BM25Okapi(tokenized_corpus)
@@ -207,7 +190,10 @@ def search(q: str, limit: int = 12):
     if df.empty or bm25 is None or not q: 
         return {"results": [], "query_tokens": []}
     
-    tokens = get_ngrams(clean_text(q))
+    # Applica la NUOVA clean_text anche alla query
+    cleaned_query = clean_text(q)
+    tokens = get_ngrams(cleaned_query)
+    
     scores = bm25.get_scores(tokens)
     top_n = bm25.get_top_n(tokens, list(range(len(df))), n=limit)
     
