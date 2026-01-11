@@ -12,7 +12,6 @@ const recipe = computed(() => {
   return null;
 });
 
-// Se non c'è ricetta (es. ricarica pagina diretta), torna home
 if (!recipe.value) {
   router.push('/');
 }
@@ -23,13 +22,11 @@ if (!recipe.value) {
     
     <div class="recipe-card card">
       
-      <!-- HEADER -->
       <div class="card-header">
         <a href="#" @click.prevent="router.back()" class="back-link">← Torna indietro</a>
         <span class="header-icon">🍴</span>
       </div>
 
-      <!-- CONTENT -->
       <div class="card-content">
 
         <div class="title-row">
@@ -69,7 +66,6 @@ if (!recipe.value) {
 </template>
 
 <style scoped>
-/* PAGINA CENTRATA */
 .page-center {
   min-height: 100vh;
   display: flex;
@@ -77,11 +73,10 @@ if (!recipe.value) {
   padding: 50px 20px;
 }
 
-/* RECIPE CARD (Dal tuo CSS) */
 .recipe-card {
   display: flex;
   width: 100%;
-  max-width: 900px; /* Adattato per schermi normali, 1362px è molto largo */
+  max-width: 900px;
   padding-bottom: 30px;
   flex-direction: column;
   
@@ -91,7 +86,6 @@ if (!recipe.value) {
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* HEADER */
 .card-header {
   width: 100%;
   padding: 15px 30px;
@@ -110,7 +104,6 @@ if (!recipe.value) {
 
 .header-icon { font-size: 24px; }
 
-/* CONTENT */
 .card-content {
   width: 100%;
   padding: 30px;
@@ -119,7 +112,6 @@ if (!recipe.value) {
   gap: 30px;
 }
 
-/* TITLE ROW */
 .title-row {
   display: flex;
   justify-content: space-between;
@@ -140,7 +132,6 @@ if (!recipe.value) {
   color: var(--text-gray);
 }
 
-/* TEXT BLOCKS */
 .text {
   font-size: 16px;
   line-height: 24px;

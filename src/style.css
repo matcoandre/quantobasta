@@ -2,9 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* --- VARIABILI GLOBALI (COLORI) --- */
 :root {
-  /* TEMA CHIARO (Default) */
   --bg-body: #ffffff;
   --bg-card: #FDFDFD;
   --bg-search: #F7F7F7;
@@ -17,26 +15,24 @@
   --primary: #0099FF;
 }
 
-/* FIX QUI: Usiamo "html.dark" per sovrascrivere le variabili */
 html.dark {
-  --bg-body: #111827;     /* Grigio scuro (Background) */
-  --bg-card: #1f2937;     /* Grigio card */
-  --bg-search: #374151;   /* Input search */
-  --border: #4b5563;      /* Bordi */
-  --text-main: #f3f4f6;   /* Testo principale bianco */
-  --text-gray: #9ca3af;   /* Testo secondario grigio chiaro */
-  --chip-bg: #1e3a8a;     /* Chip scuri */
-  --chip-text: #bfdbfe;   /* Testo chip chiaro */
+  --bg-body: #111827;
+  --bg-card: #1f2937;
+  --bg-search: #374151;
+  --border: #4b5563;
+  --text-main: #f3f4f6;
+  --text-gray: #9ca3af;
+  --chip-bg: #1e3a8a;
+  --chip-text: #bfdbfe;
   --shadow: rgba(0, 0, 0, 0.5);
   --primary: #3b82f6;
 }
 
-/* Applichiamo le variabili al body */
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background-color: var(--bg-body); /* IMPORTANTE */
-  color: var(--text-main);          /* IMPORTANTE */
+  background-color: var(--bg-body);
+  color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 

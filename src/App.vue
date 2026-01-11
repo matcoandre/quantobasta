@@ -38,12 +38,11 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Stile del bottone */
 .theme-toggle {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999; /* Z-Index alto per stare sopra il modale */
+  z-index: 9999;
   background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text-main);

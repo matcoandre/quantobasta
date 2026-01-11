@@ -20,8 +20,6 @@ app.add_middleware(
 
 CSV_PATH = "backend/recipes.csv"
 
-# --- 1. PREPROCESSING CORRETTO ---
-
 def clean_text(text):
     """
     Pulisce il testo per l'indicizzazione.
@@ -49,7 +47,6 @@ def get_ngrams(text, n=2):
         tokens.extend([" ".join(ngram) for ngram in n_grams_tuples])
     return tokens
 
-# --- 2. LOGICA DI PULIZIA VISIVA (STOP WORDS & STEPS) ---
 
 def split_text_smart(text):
     text = str(text).strip()
@@ -123,8 +120,6 @@ def parse_steps_smart(val):
     except:
         return split_text_smart(str(val))
 
-# --- 3. CARICAMENTO ---
-
 def load_data():
     if not os.path.exists(CSV_PATH): return pd.DataFrame()
     try:
@@ -175,7 +170,6 @@ def load_data():
 
 df = load_data()
 
-# --- 4. MOTORE BM25 ---
 
 if not df.empty and 'search_text' in df.columns:
     # Applica la NUOVA clean_text
