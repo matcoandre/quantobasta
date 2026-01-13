@@ -6,9 +6,8 @@ const queryText = ref('');
 const chips = ref([]);
 const results = ref([]);
 const loading = ref(false);
-const selectedRecipe = ref(null); 
+const selectedRecipe = ref(null);
 
-// --- GESTIONE CHIPS (TAG) ---
 const handleInputKey = (e) => {
   if (e.key === 'Enter') {
     if (queryText.value.trim()) {
@@ -34,7 +33,6 @@ const removeChip = (index) => {
   search();
 };
 
-// --- MOTORE DI RICERCA ---
 const search = async () => {
   let fullQuery = [...chips.value, queryText.value].join(' ').trim();
   
@@ -49,7 +47,7 @@ const search = async () => {
     const res = await axios.get('/api/search', { params: { q: fullQuery, limit: 12 } });
     results.value = res.data.results;
   } catch (e) {
-    console.error("Errore API:", e);
+    console.error(e);
   } finally {
     loading.value = false;
   }
@@ -57,12 +55,12 @@ const search = async () => {
 
 const openRecipe = (recipe) => {
   selectedRecipe.value = recipe;
-  document.body.style.overflow = 'hidden'; // Blocca scroll sotto
+  document.body.style.overflow = 'hidden';
 };
 
 const closeRecipe = () => {
   selectedRecipe.value = null;
-  document.body.style.overflow = 'auto'; // Riattiva scroll
+  document.body.style.overflow = 'auto';
 };
 </script>
 
@@ -104,9 +102,9 @@ const closeRecipe = () => {
       <div v-if="loading" class="loading-state">
         <p>Sto cercando nel ricettario...</p>
       </div>
+
       <div class="grid" v-else>
         <article v-for="(recipe, index) in results" :key="index" class="card">
-          
           <h3>{{ recipe.title_page }}</h3>
           <span class="time-badge">⏱ {{ 15 + (recipe.steps?.length || 5) * 5 }} min</span>
 
@@ -127,7 +125,6 @@ const closeRecipe = () => {
 
     <div v-if="selectedRecipe" class="recipe-modal" @click.self="closeRecipe">
       <div class="recipe-card-modal">
-        
         <div class="card-header">
           <a href="#" @click.prevent="closeRecipe" class="back-link">← Torna indietro</a>
           <span class="icon-header">🍴</span>
@@ -233,7 +230,7 @@ const closeRecipe = () => {
   display: flex; flex-direction: column;
   transition: transform 0.2s;
 }
-.card:hover { transform: translateY(-10px); border-color: var(--primary); }
+.card:hover { transform: translateY(-5px); border-color: var(--primary); }
 
 .card h3 { 
   margin: 0; font-size: 24px; 

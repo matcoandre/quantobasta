@@ -27,12 +27,9 @@ onMounted(() => {
 
 <template>
   <div class="app-wrapper">
-    <!-- Tasto Dark Mode -->
     <button @click="toggleTheme" class="theme-toggle" :title="isDark ? 'Passa a Light Mode' : 'Passa a Dark Mode'">
       {{ isDark ? '☀️' : '🌙' }}
     </button>
-
-    <!-- Router View -->
     <router-view></router-view>
   </div>
 </template>
