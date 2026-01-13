@@ -133,7 +133,8 @@ def home(): return {"status": "ok"}
 
 @app.get("/search")
 def search(q: str, limit: int = 12):
-    if df.empty or not q: return {"results": []}
+    if df.empty or bm25 is None or not q: 
+        return {"results": []}
     
     q_clean = preprocessing_bm25(q)
     q_tokens = get_ngrams(q_clean)

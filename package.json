@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm:server\" \"npm:client\"",
-    "server": "pip3 install -r backend/requirements.txt && python3 backend/main.py",
+    "server": "pip install -r backend/requirements.txt && python backend/main.py",
     "client": "vite --host",
     "build": "vite build"
   },
