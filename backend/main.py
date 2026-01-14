@@ -19,43 +19,115 @@ app.add_middleware(
 CSV_PATH = "backend/recipes.csv"
 
 def pulisci_lista_ingredienti(testo):
+    """
+    Trasforma la stringa "['Uova', '4', 'Farina', '100g']" 
+    in una lista accoppiata ["4 Uova", "100g Farina"].
+    """
     s = str(testo)
+    # Rimuoviamo parentesi e virgolette
     s = s.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+    
+    # Dividiamo per virgola
     elementi = s.split(",")
-    lista_finale = []
+    
+    # Creiamo una lista temporanea pulita dagli spazi
+    elementi_puliti = []
     for x in elementi:
-        parola = x.strip()
-        if parola:
-            lista_finale.append(parola)
+        p = x.strip()
+        if p:
+            elementi_puliti.append(p)
+            
+    lista_finale = []
+    
+    # Scorriamo la lista a passi di 2 (coppie)
+    # Assumiamo che la struttura sia sempre [Nome, Quantità, Nome, Quantità...]
+    i = 0
+    while i < len(elementi_puliti):
+        nome = elementi_puliti[i]
+        
+        # Controlliamo se esiste un elemento successivo (la quantità)
+        if i + 1 < len(elementi_puliti):
+            quantita = elementi_puliti[i+1]
+            
+            # Uniamo invertendo: "4" + " " + "Uova"
+            ingrediente_completo = quantita + " " + nome
+            lista_finale.append(ingrediente_completo)
+            
+            # Avanziamo di 2 perché abbiamo usato due elementi
+            i += 2 
+        else:
+            # Se rimane un elemento spaiato alla fine, lo aggiungiamo così com'è
+            lista_finale.append(nome)
+            i += 1
+            
     return lista_finale
 
 def pulisci_procedimento(testo):
+    """
+    Divide il procedimento in passaggi analizzando la punteggiatura e le maiuscole.
+    Risolve il problema del testo attaccato (es. "uova Quindi").
+    """
     s = str(testo).strip()
-    passaggi_grezzi = []
-
+    
+    # 1. Se il testo è già una lista Python pulita (es. inizia con [ e finisce con ])
     if s.startswith("[") and s.endswith("]"):
-        contenuto = s[1:-1]
+        contenuto = s[1:-1] # Togliamo le parentesi
         if "', '" in contenuto:
-            passaggi_grezzi = contenuto.split("', '")
+            return contenuto.split("', '")
         elif '", "' in contenuto:
-            passaggi_grezzi = contenuto.split('", "')
-        else:
-            passaggi_grezzi = [contenuto]
-    else:
-        s = s.replace(". ", "|")
-        passaggi_grezzi = s.split("|")
+            return contenuto.split('", "')
+    
+    # 2. Se è un "muro di testo", lo analizziamo carattere per carattere
+    # Puliamo artefatti comuni
+    s = s.replace("['", "").replace("']", "").replace('["', '').replace('"]', '')
+    s = s.replace("\\n", " ") # Togliamo gli "a capo" informatici
 
+    testo_con_separatori = ""
+    lunghezza = len(s)
+
+    # Scorriamo il testo fino al penultimo carattere
+    for i in range(lunghezza):
+        char = s[i]
+        testo_con_separatori += char
+        
+        # Logica per capire se dobbiamo spezzare QUI
+        # Guardiamo avanti di 1 o 2 caratteri se possibile
+        if i < lunghezza - 2:
+            curr = s[i]      # Carattere corrente
+            succ = s[i+1]    # Carattere successivo
+            succ2 = s[i+2]   # Carattere dopo il successivo
+
+            # CASO A: Punto attaccato alla Maiuscola (es. "ambiente.Una")
+            if curr == "." and succ.isupper():
+                testo_con_separatori += "|"
+            
+            # CASO B: Fine frase senza punto (es. "uovo Quindi" o "integre) Considerate")
+            # Logica: Se (lettera minuscola O parentesi chiusa) + Spazio + Maiuscola
+            # Escludiamo parole come "gr. 100" o sigle controllando che succ2 sia Maiuscola
+            elif (curr.islower() or curr == ")") and succ == " " and succ2.isupper():
+                testo_con_separatori += "|"
+
+    # 3. Dividiamo usando il separatore che abbiamo inserito
+    passaggi_grezzi = testo_con_separatori.split("|")
+    
     passaggi_puliti = []
     for p in passaggi_grezzi:
-        p = p.replace("'", "").replace('"', "").strip()
+        p = p.strip()
+        # Pulizia finale
+        p = p.replace("'", "").replace('"', "")
+        
+        # Filtriamo frammenti troppo corti
         if len(p) > 5:
+            # Assicuriamo che inizi con maiuscola
             p = p[0].upper() + p[1:]
+            # Assicuriamo che finisca con un punto
             if p[-1] not in [".", "!", "?", ":"]:
                 p += "."
             passaggi_puliti.append(p)
 
+    # Se non siamo riusciti a dividere nulla, ritorniamo il testo intero pulito
     if not passaggi_puliti:
-        return [s.replace("[", "").replace("]", "").replace("'", "")]
+        return [s]
 
     return passaggi_puliti
 
